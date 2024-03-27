@@ -57,6 +57,54 @@ Policy MLS status: enabled
 
 
 ## Enabling HTTPS and certificate files SElinux context
-## SElinux context for web server CONTENT.
+1. Install Apache HTTP server and mod-ssl Module
+    <p align="center">
+      <img width="389" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/b8a52d64-5c30-4fcb-8029-3d8a7391d849">
+
+    </p>
+2. Generate Self-Signed SSL Certificate
+   Create a public key certificate and private key pair using OpenSSL to establish secure HTTPS connections.
+   <p align="center">
+     <img width="646" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/b5a4879a-4009-47ca-b9ea-86650195700e">
+
+      <img width="651" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/9d4e057e-865d-4087-9dc2-72f47b14caa5">
+
+   </p>
+   Fill in the information accordingly to generate a valid certificate.
+
+   Your `server.key` and `server.crt` should look like these:
+   <p align="center">
+     <img width="452" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/5d118aa9-3c41-4b32-8986-d226cca113a0">
+     <img width="644" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/b66a082e-cb2b-453a-845c-9b63daaf813f">
+   </p>
+4. Store certificate and private key with proper SELinux context.
+   Proper context, ownership, and permissions are important for SELinux to enforce all the security rules.
+  <p align="center">
+    <img width="646" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/86b3bf08-9a14-4bd4-84ae-1726d10ecc51">
+    <img width="649" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/b2d0e2df-7152-4b61-9636-3260c17b41e3">
+    <img width="643" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/e4c5a3a5-a34b-4e6f-9018-d3d932a86268">
+    <img width="646" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/1d42e915-4063-4620-825d-6a685e22bd96">
+    <img width="646" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/3b1930be-7946-4b82-9ee8-d80cf3ad1252">
+  </p>
+
+5. Configure Apache to use SSL/TLS
+   Modify the SSL config file to specify the locations of the certificate and private key files for secure HTTPS connections.
+   <p align="center">
+     <img width="446" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/4c5cf1a3-dfd1-45b8-86a6-3d9b5f082c74">
+
+   </p>
+
+6. Modify firewall rules for HTTPS communications
+   Update firewall settings to permit HTTPS communications via port 443 so that external clients are able to establish secure connections to the web server over HTTPS.
+
+7. Verify SSL configuration and certificate usage
+   Let's do the test!
+   If everything is configured correctly, the server will respond with the SSL certificate details, including the information provided during certification generation. And a secure connection is established throughoutly.
+      <p align="center">
+     <img width="646" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/8fdc4137-7ac0-4676-bd25-0a9f87427cc4">
+
+   </p>
+
+## SELinux context for web server CONTENT.
 ## Create a sudo transition for a cy5130_u to become webadm_r
 ## Create a content page for the user
