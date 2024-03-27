@@ -4,6 +4,14 @@ SELinux stands for Security-Enhanced Linux which is a security architecture for 
 A set of rules are defined and used to tell the SELinux what can or cannot be accessed. Whenever a request is made to access an object, SELinux will check with an AVC where permissions are cached for subjects and objects.
 So, this project will briefly demonstrate how SELinux works.
 ## Content Page
+- [Objective](#objective)
+- [Running SELinux](#running-selinux)
+- [Changing httpd port mandatory policy](#changing-httpd-port-mandatory-policy)
+- [Enabling HTTPS and certificate files SELinux context](#enabling-https-and-certificate-files-selinux-context)
+- [SELinux context for web server CONTENT](#selinux-context-for-web-server-content)
+- [Create a sudo transition for a demo_u to become webadm_r](#create-a-sudo-transition-for-a-demo_u-to-become-webadm_r)
+- [Create a content page for the user](#create-a-content-page-for-the-user)
+
 ## Objective
 - Understand how SELinux contexts work and their impact on access control
 - Troubleshooting SELinux denials and ensuring proper permissions for web server content.
@@ -106,5 +114,118 @@ Policy MLS status: enabled
    </p>
 
 ## SELinux context for web server CONTENT.
-## Create a sudo transition for a cy5130_u to become webadm_r
+1. Create a custom `index.html`
+```
+<HTML>
+  <header>
+    <title>SELINUX Project</title>
+  </header>
+  <body>
+    I am Wingna Tsoi and this is my SELINUX Project on date 2/21/2024.
+  </body>
+</html>
+```
+2. Move to `var/www/html/index.html`
+3. Try `curl` to see if the new and custom `index.html` is shown. You should get sth like this, meaning the action is unpermitted (Great! SELinux is doing its job!):
+<p align="center">
+  <img width="474" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/678bbe1c-a175-448e-880b-23253655adcc">
+  <img width="475" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/344d5c2c-6123-43bc-92b5-c3b8ba156eef">
+
+</p>
+4. Change the permission and context of the `index.html`.
+   <p align="center">
+     <img width="476" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/168929b2-20c8-4f21-804f-0e8d8f7d07f6">
+
+   </p>
+5. Connection succeeds now!
+  <p align="center">
+    <img width="475" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/fe6f7706-a17d-4f3b-966c-1e209d271958">
+
+  </p>
+  
+## Create a sudo transition for a demo_u to become webadm_r
+1. Create a new user: 
+   Use the appropriate command to create a new user. For example:
+     ```
+     sudo useradd -m jennifer
+     ```
+
+2. Assign SELinux user and roles:
+   - Assign the SELinux user `demo_u` to the newly created user `jennifer`. This can be done by modifying the `/etc/selinux/targeted/users_extra_users` file or using `semanage`.
+     It is to ensure that operations of the user are controlled by SELinux policies. Also, assign the role webadm_r to grant additional permissions to the user.
+   - Assign the role `webadm_r` to the user `jennifer`. This can be done by modifying the `/etc/selinux/targeted/contexts/users/user_u` file or using `semanage`.
+   - Relabel the home directory of the user `jennifer` to ensure proper SELinux contexts:
+     ```
+     sudo restorecon -Rv /home/jennifer
+     ```
+
+3. Verify SELinux context:
+   - Log in as the user `jennifer`.
+   - Check the SELinux context using the command:
+     ```
+     id -Z
+     ```
+    - Ensure the SELinux context matches the expected one (`demo_u:staff_r:staff_t:s0:c0.c1023`).
+
+4. Modify sudoers file:  
+  Edit the sudoers file using `visudo`:
+     ```
+     sudo visudo
+     ```  
+  Add the following line at the end of the file to configure sudo transition for the user `jennifer`:
+     ```
+     jennifer    ALL=(ALL:ALL) TYPE=webadm_t ROLE=webadm_r /bin/sh
+     ```
+
+5. Test sudo transition:
+Run a shell with sudo using the configured user and check the SELinux context:
+     ```
+     sudo /bin/sh
+     id -Z
+     ```
+     ![image](https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/a5401e43-4ddf-465f-8d66-838cdaab5871)
+
+
 ## Create a content page for the user
+1. Create public_html directory and index.html page:
+   - Create a directory named `public_html` in the user's home directory (`/home/<username>`) to serve as the root directory for user-specific web content.
+   - Create an `index.html` page within the `public_html` directory with personalized content, greeting the user with their username.
+
+2. Edit userdir.conf:
+   - Edit the `userdir.conf` file located at `/etc/httpd/conf.d/userdir.conf` to configure Apache to serve content from user directories.
+   - It is to allow Apache to access user-specific web content stored in the `public_html` directories.
+   - Your config file should look like this:
+     <p>
+       <img width="443" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/c056b9b1-f454-4057-9acd-2548b4693fd2">
+
+     </p>
+
+3. Restart httpd service:  
+ Restart the `httpd` service to apply the changes made to the `userdir.conf` file and ensure that Apache is configured to serve user-specific web content.
+
+4. Test access using curl:
+   - Use `curl` to test access to the user's web content both through the default Apache page `https://localhost` or `http://localhost:<port>` and through the user's page `https://localhost/~<username>/` or `http://localhost:<port>/~<username>/`.
+   - Access to the user's page should be forbidden for the time being due to SELinux context and permissions.
+
+5. Edit SELinux context and permissions:  
+Edit the SELinux context and permissions of the `public_html` directory to allow Apache to access user-specific web content instead of the default `/var/www/html`.
+  Correct permission and context should look like this:
+    ![image](https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/77c31879-c46d-4bc0-9264-5e3b85723efa)
+    ![image](https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/295360a0-ab84-43a9-8000-6deab4efae92)
+
+
+6. Set SELinux Boolean:  
+Set the SELinux Boolean to grant Apache the necessary permissions to access user-specific web content.
+     <p>
+       <img width="575" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/50e8b281-91c4-4fdd-b986-4db8ff61ad52">
+
+     </p>
+
+7. Test access again:  
+Use `curl` to test access to the user's web content again. You should be able to visit your own index page! Congrats！
+   <p align="center">
+     <img width="466" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/9f91cb0e-1d98-4462-858f-e400d984abd5">
+     
+   </p>
+
+
