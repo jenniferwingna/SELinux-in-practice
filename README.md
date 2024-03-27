@@ -34,11 +34,26 @@ Policy MLS status: enabled
 
    </p>
 
-3. Update firewall rules to allow connections to your web server by execute `$systemctl status firewalld`.
-4. Change the default port (TCP80) to a custom port (TCP10xxx) in the /etc/httpd/conf/httpd.conf file, using the last 3 digits of any numbers you like.(Remember it!)
+3. Update firewall rules to allow connections to your web server by executing `$systemctl status firewalld`.
+  <P align="center">
+    <img width="503" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/1d7e24ab-d031-424e-8e44-94ef3df222ca">
+
+  </P>
+4. Change the default port (TCP80) to a custom port (TCP10xxx) in the /etc/httpd/conf/httpd.conf file, using the last 3 digits of any numbers you can remember.
+<p align="center">
+  <img width="485" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/ab321049-6462-43fe-bfc1-2d0a2448b258">
+
+</p>
 5. Update the SELinux targeted policy to include the custom port (10xxx) as a valid http_port_t.
+  <p align="center">
+    <img width="423" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/bb3b09c9-e741-40a5-aab7-fde503efdf5e">
+
+  </p>
 6. Verify the server functionality by `curl` to ensure your server is working just fine in port 10xxx. Don't forget to reconfigure firewalld to permit connections.
-   
+   <P align="center">
+     <img width="487" alt="image" src="https://github.com/jenniferwingna/SELinux-in-practice/assets/116328799/bc0198ec-f6e8-433e-8a9c-7fbb482e1b26">
+
+   </P>
 
 
 ## Enabling HTTPS and certificate files SElinux context
